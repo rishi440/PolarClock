@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<!-- saved from url=(0054)http://student.wiu.edu/R-RemeshRanjini/polarClock.html -->
+<html class="gr__student_wiu_edu"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style>
+
+body {
+  background: #000;
+  font: 10px sans-serif;
+  margin: auto;
+  position: relative;
+  width: 960px;
+}
+
+text {
+  text-anchor: middle;
+  font: 13px cursive;
+  font-weight: bold;
+}
+
+button {
+  text-anchor: middle;
+  font: 16px helvetica;
+  font-weight: bold;
+  font-style: italic;
+  position: relative;
+
+}
+
+#credit {
+  position: absolute;
+  left:700px;
+  top:700px;
+  font: 10px sans-serif;
+  right: 10px;
+  bottom: 10px;
+  color: #ddd;
+}
+
+#credit a {
+  color: inherit;
+}
+
+</style>
+</head><body data-gr-c-s-loaded="true"><div id="credit">Reference Used <a href="https://bl.ocks.org/mbostock/1096355/">PolarClock</a>.</div>
+<button id="alaska" ,="" onclick="alaskaTime()">Alaska Time</button>
+<button id="pacific" ,="" onclick="pacificTime()">Pacific Time</button>
+<button id="mountain" ,="" onclick="mountainTime()">Mountain Time</button>
+<button id="central" ,="" onclick="centralTime()">Central Time</button>
+<button id="eastern" ,="" onclick="easternTime()">Eastern Time</button>
+<button id="atlantic" ,="" onclick="atlanticTime()">Atlantic Time</button> 
+<button id="gmt" ,="" onclick="gmtTime()">Greenwich Mean Time</button>  
+<button id="kuwait" ,="" onclick="kuwaitTime()">Kuwait Time</button> 
+<button id="india" ,="" onclick="indiaTime()">Indian Standard Time</button> 
+<button id="australia" ,="" onclick="australiaTime()">Australian Central Standard Time</button>                                
+
+<script src="./polarClock_files/d3.v3.js.download"></script>
+<script>
+
+
+var offsetValue = 0;
+var offsetMinute = 0;
+
+function alaskaTime()
+{
+  offsetValue = -9
+  offsetMinute = 0;
+  //tick();
+}
+function pacificTime()
+{
+  offsetValue = -8;
+  offsetMinute = 0;
+  //tick();
+}
+function mountainTime()
+{
+  offsetValue = -7;
+  offsetMinute = 0;
+  //tick();
+}
+function centralTime()
+{
+  offsetValue = -6;
+  offsetMinute = 0;
+  //tick();
+}
+function easternTime()
+{
+  offsetValue = -5;
+  offsetMinute = 0;
+  //tick();
+}
+function atlanticTime()
+{
+  offsetValue = -4;
+  offsetMinute = 0;
+  //tick();
+}
+function gmtTime()
+{
+  offsetValue = 0;
+  offsetMinute = 0;
+  //tick();
+}
+function kuwaitTime()
+{
+  offsetValue = 3;
+  offsetMinute = 0;
+  //tick();
+}
+function indiaTime()
+{
+  offsetValue = 5;
+  offsetMinute = 30;
+  //tick();
+}
+function australiaTime()
+{
+  offsetValue = 9;
+  offsetMinute = 30;
+  //tick();
+}
+
+
+
+function fields() 
+{
+ 
+  var now = new Date;
+  var time = new Date; 
+
+  now = time.getTime() + (time.getTimezoneOffset() * 60000);
+
+  now = d3.time.hour.offset(now,offsetValue);
+  now = d3.time.minute.offset(now,offsetMinute);
+
+  
+
+  return [
+    {index: .61, text: formatSecond(now), value: now.getSeconds() / 60},
+    {index: .51, text: formatMinute(now), value: now.getMinutes() / 60},
+    {index: .41, text: formatHour(now),   value: now.getHours() / 24},
+    {index: .31, text: formatDay(now),    value: now.getDay() / 7},
+    {index: .21, text: formatDate(now),   value: (now.getDate() - 1) / (32 - new Date(now.getYear(), now.getMonth(), 32).getDate())},
+    {index: .11, text: formatMonth(now),  value: now.getMonth() / 12}
+  ];
+}
+
+var width = 1000,
+    height = 700,
+    radius = Math.min(width, height) / 2.0,
+    spacing = .09;
+
+var formatSecond = d3.time.format("%Ss"),
+    formatMinute = d3.time.format("%Mm"),
+    formatHour = d3.time.format("%Hh"),
+    formatDay = d3.time.format("%a"),
+    formatDate = d3.time.format("%d "),
+    formatMonth = d3.time.format("%b");
+
+var color = d3.scale.linear()
+    .range(["hsl(-360,40%,40%)", "hsl(360,50%,40%)"])
+    .interpolate(interpolateHsl);
+
+
+var arc = d3.svg.arc()
+    .startAngle(0)
+    .endAngle(function(d) { return d.value * 2 * Math.PI; })
+    .innerRadius(function(d) { return d.index * radius; })
+    .outerRadius(function(d) { return (d.index + spacing) * radius; })
+    .cornerRadius(20);
+
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .append("g")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2.4 + ")");
+ 
+
+var field = svg.selectAll("g")
+    .data(fields)
+    .enter().append("g");
+
+
+
+field.append("path");
+
+field.append("text");
+
+
+d3.select(self.frameElement).style("height", height + "px");
+var rate = 1000;
+
+d3.selectAll("g").on("click", function()
+                              {
+                                rate = rate - 50;
+
+                                if(rate == 50)
+                                  rate = 1000;
+                              });
+                                  
+
+function tick() 
+{
+  
+
+  field = field
+      .each(function(d) { this._value = d.value; })
+      .data(fields)
+      .each(function(d) { d.previousValue = this._value; });
+
+  field.select("path")
+    .transition()
+      .ease("linear")
+      .attrTween("d", arcTween)
+      .style("fill", function(d) { return color(Math.random()); });
+
+  field.select("text")
+      .attr("dy", function(d) { return d.value < .5 ? "-.5em" : "1em"; })
+      .text(function(d) { return d.text; })
+    .transition()
+      .ease("linear")
+      .attr("transform", function(d) {
+        return "rotate(" + 360 * d.value + ")"
+            + "translate(0," + -(d.index + spacing / 2) * radius + ")"
+            + "rotate(" + (d.value < .5 ? -90 : 90) + ")"
+      });
+  
+  setTimeout(tick, rate - Date.now() % 1000);
+
+  
+}
+
+tick();
+
+function arcTween(d) 
+{
+  var i = d3.interpolateNumber(d.previousValue, d.value);
+  return function(t) { d.value = i(t); return arc(d); };
+}
+
+function interpolateHsl(a, b) 
+{
+  var i = d3.interpolateString(a, b);
+  return function(t) 
+  {
+    return d3.hsl(i(t));
+  };
+}
+
+</script><svg width="1000" height="700"><g transform="translate(500,291.6666666666667)"><g><path d="M1.2434497875801753e-14,-228.7083295378636A15.749999999999986,15.749999999999986 0 0,1 16.832061068702288,-244.42111553664807A244.99999999999997,244.99999999999997 0 1,1 -80.68318598336884,-231.33357624774897A15.749999999999986,15.749999999999986 0 0,1 -60.30376030335291,-220.61495074739554L-60.30376030335291,-220.61495074739554A15.749999999999986,15.749999999999986 0 0,1 -70.30963349979287,-201.5906878730384A213.5,213.5 0 1,0 14.667938931297709,-212.99554353907908A15.749999999999986,15.749999999999986 0 0,1 1.2434497875801753e-14,-228.7083295378636Z" style="fill: rgb(97, 94, 110);"></path><text dy="1em" transform="translate(-60.36551432350444,-220.83691299218066),rotate(74.71199999999999),scale(1,1)">58s</text></g><g><path d="M1.0658141036401503e-14,-193.61043360315065A15.75,15.75 0 0,1 17.02702702702704,-209.30857686827096A210,210 0 1,1 -184.2873838291122,100.68843112007194A15.75,15.75 0 0,1 -176.87193217037265,78.74845782819558L-176.87193217037265,78.74845782819558A15.75,15.75 0 0,1 -156.6442762547454,85.58516645206116A178.5,178.5 0 1,0 14.472972972972983,-177.91229033803032A15.75,15.75 0 0,1 1.0658141036401503e-14,-193.61043360315065Z" style="fill: rgb(105, 123, 99);"></path><text dy="1em" transform="translate(-177.4562063133921,79.00859170133505),rotate(-24),scale(1,1)">41m</text></g><g><path d="M8.881784197001252e-15,-158.4692399174048A15.75,15.75 0 0,1 17.307692307692317,-174.142021887258A175,175 0 0,1 72.08210972428296,-159.46526097459733A15.75,15.75 0 0,1 79.2346199587024,-137.23838748688357L79.2346199587024,-137.23838748688357A15.75,15.75 0 0,1 59.10732997391202,-130.7615139991698A143.5,143.5 0 0,0 14.1923076923077,-142.79645794755157A15.75,15.75 0 0,1 8.881784197001252e-15,-158.4692399174048Z" style="fill: rgb(74, 103, 110);"></path><text dy="-.5em" transform="translate(79.625,-137.91454841793268),rotate(-60)">02h</text></g><g><path d="M7.105427357601002e-15,-123.24771803161306A15.75,15.75 0 0,1 17.746478873239443,-138.87066820463443A140,140 0 0,1 97.50871179738897,-100.4592012889498A15.75,15.75 0 0,1 96.35894609945777,-76.84369529507148L96.35894609945777,-76.84369529507148A15.75,15.75 0 0,1 75.56925164297644,-77.8558809989361A108.5,108.5 0 0,0 13.75352112676057,-107.6247678585917A15.75,15.75 0 0,1 7.105427357601002e-15,-123.24771803161306Z" style="fill: rgb(133, 58, 109);"></path><text dy="-.5em" transform="translate(97.14256133843406,-77.46861175871828),rotate(-38.57143020629883)">Mon</text></g><g><path d="M5.329070518200751e-15,-87.84930278607793A15.75,15.75 0 0,1 18.529411764705888,-103.35212092479756A105,105 0 1,1 -38.954742607511626,-97.50655377143896A15.75,15.75 0 0,1 -17.683934641658094,-86.05102239711951L-17.683934641658094,-86.05102239711951A15.75,15.75 0 0,1 -27.268319825258136,-68.25458764000727A73.5,73.5 0 1,0 12.970588235294123,-72.3464846473583A15.75,15.75 0 0,1 5.329070518200751e-15,-87.84930278607793Z" style="fill: rgb(84, 97, 120);"></path><text dy="1em" transform="translate(-17.965911448300858,-87.42304286471747),rotate(78.3870849609375)">31 </text></g><g><path d="M7.105427357601002e-15,-51.91338940966965A15.75,15.75 0 0,1 20.3225806451613,-66.98501859312213A70,70 0 0,1 20.3225806451613,66.98501859312213A15.75,15.75 0 0,1 7.105427357601002e-15,51.91338940966965L7.105427357601002e-15,51.91338940966965A15.75,15.75 0 0,1 11.177419354838714,36.84176022621717A38.5,38.5 0 0,0 11.177419354838714,-36.84176022621717A15.75,15.75 0 0,1 7.105427357601002e-15,-51.91338940966965Z" style="fill: rgb(70, 97, 107);"></path><text dy="1em" transform="translate(6.6437088665480396e-15,54.25),rotate(-90.00000000000003)">Jul</text></g></g></svg>
+
+
+</body></html>
